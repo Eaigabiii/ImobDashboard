@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Imóveis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #212A31;
+            color: #D3D9D4;
+        }
+        .card {
+            background-color: #2E3944;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.25);
+        }
+        .icon { color: #55a3c2; }
+        .list-item { display: flex; align-items: flex-start; gap: 0.75rem; }
+        .text-accent { color: #55a3c2; }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transform: scale(1);
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .btn-primary { background-color: #124E66; }
+        .btn-primary:hover { background-color: #1a6288; }
+        .btn-secondary { background-color: #748D92; }
+        .btn-secondary:hover { background-color: #63777A; }
+
+        /* Estilos para o Modal */
+        #detailed-flow-modal {
+            transition: opacity 0.3s ease;
+        }
+        #close-modal-btn {
+            font-size: 2.5rem;
+            line-height: 1;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6">
+
+    <div class="max-w-7xl mx-auto bg-[#2E3944] rounded-2xl shadow-xl p-4 sm:p-8 space-y-6 sm:space-y-8">
+        <header id="main-header" class="flex justify-between items-center text-center relative">
+            <button id="back-button" class="btn btn-secondary absolute left-0 hidden"><i class="fas fa-arrow-left mr-2"></i> Voltar</button>
+            <div class="flex-grow">
+                <h1 class="text-2xl sm:text-4xl font-bold text-white mb-1 sm:mb-2">Análise de Imóveis</h1>
+                <p id="header-subtitle" class="text-sm sm:text-lg text-gray-200">Visualize e compare as opções de investimento imobiliário</p>
+            </div>
+            <button id="comparator-button" class="btn btn-primary absolute right-0"><i class="fas fa-balance-scale mr-2"></i> Comparativo</button>
+        </header>
+
+        <main id="dashboard-content" class="space-y-6 sm:space-y-8">
+            <!-- Conteúdo dinâmico será injetado aqui -->
+        </main>
+        
+        <p class="text-center text-sm text-gray-400 mt-8">Criado por Gabriela Carvalho</p>
+    </div>
+
+    <!-- Modal de Fluxo Detalhado -->
+    <div id="detailed-flow-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
+        <div class="card w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-700">
+                <h2 class="text-2xl font-bold text-white">Fluxo de Pagamento Detalhado</h2>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <div id="modal-content" class="overflow-y-auto">
+                <!-- Tabela do fluxo será injetada aqui -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- BANCO DE DADOS (MOCK) ---
+        const dadosPorCidade = {'saopaulo':{'prontos':{'on-brooklin':{nome:"ON Brooklin",incorporadora:"Não informado",localizacao:"Brooklin - SP",area:"21 m²",valor:"Por: R$ 354.087,49",valor_de:"De: R$ 406.997,12",rendimento_bruto:"Não informado",descricao_longa:`Localizado no coração do Brooklin, este imóvel pronto para morar oferece uma excelente oportunidade. Com sua localização estratégica na Av. Santo Amaro, o projeto garante acesso rápido ao metrô e a importantes centros comerciais e corporativos. A proximidade a hospitais, parques, universidades e shoppings da região garante alta atratividade para turistas, profissionais e estudantes. É um endereço que combina conveniência urbana, qualidade de vida e um forte potencial de valorização a curto prazo.`,ficha_tecnica:{endereco:"Av. Santo Amaro, 5200",tipologia:"Studio",num_unidades:"Não informado",num_pavimentos:"4° Pavimento",ticket_medio:"Não informado",arquiteto:"Não informado"},geradores_demanda:["200m de caminhada até a Estação Brooklin (Linha Lilás)","06min de caminhada até a Estação Campo Belo (Linha Lilás – integração com futura Linha Ouro do Monotrilho)","07min de carro até o Hospital Santa Paula","09min de carro até o Hospital São Luiz – Unidade Itaim","Fácil acesso ao Hospital Santa Joana, Hospital Santa Catarina e Hospital Albert Einstein (Unidade Vila Mariana)","13min de carro até o Aeroporto de Congonhas","Fácil acesso à Av. dos Bandeirantes, Av. Roberto Marinho, Av. Santo Amaro e Marginal Pinheiros","200m da Av. Roque Petronio Junior;","08min de carro até a Av. Berrini;","800m da Av. Morumbi;","10min de carro até o Parque do Ibirapuera","08min de carro até o Parque Severo Gomes","06min de carro até o Sesc Vila Mariana","07min de carro até a Faculdade Anhembi Morumbi – Campus Vila Olímpia","09min de carro até a FMU – Campus Santo Amaro","10min de carro até a Universidade São Judas – Campus Moema","400m da Novartis Biociências S.A.","05min de carro até o Shopping Morumbi","07min de carro até o Shopping Market Place","09min de carro até o Shopping Vila Olímpia","08min de carro até a Disney, Globo, HBO, Nestlé, HP, Vivo e Bayer;","09min de carro até o Beyond The Club (Primeiro clube de ondas de São Paulo).","Região corporativa e gastronômica sofisticada: Jamie’s Italian, Coco Bambu, Outback, Rascal, Pobre Juan, Bráz Trattoria, Eataly e bares da Av. Juscelino Kubitschek e Vila Olímpia"],rendimento:{diaria_media:"Não informado",faturamento_bruto_mensal:"Não informado"},correcoes:{pos_habite_se:"IGP-M+1% ao mês",despesas_cliente:"Condomínio, IPTU e demais despesas do imóvel são de responsabilidade do cliente."},adicionais:"Pode ter decoração a partir de 70k",video_url:"",drive_url:"",site_url:""}},'em-construcao':{'domingos-morais':{nome:"Domingos de Morais",incorporadora:"Vitacon",localizacao:"Vila Mariana - SP",area:"A partir de 18m²",valor:"A partir de R$ 358.961,46",rendimento_bruto:"R$ 7.440,00",descricao_longa:`Localizado em um dos eixos mais conectados da zona sul de São Paulo, este imóvel no cruzamento da Rua Domingos de Morais com a Rua Luís Góes oferece uma excelente oportunidade para quem busca investir no crescente mercado de short stay urbano. Com alta circulação de turistas e executivos, acesso rápido ao metrô, comércio abundante e uma vizinhança em constante valorização, o ponto se destaca pela combinação de praticidade, segurança e infraestrutura. A poucos minutos da Av. Paulista, centros de eventos e polos corporativos, o imóvel apresenta forte potencial de ocupação e diárias elevadas — com projeções acima da média do mercado. Ideal para investidores que buscam rentabilidade com operação enxuta e valorização imobiliária garantida por localização estratégica.`,ficha_tecnica:{endereco:"RUA DOMINGOS DE MORAIS, 3.093 X RUA LUÍS GÓIS, 876",tipologia:"Studios",num_pavimentos:"17",ticket_medio:"R$ 373.584,21",arquiteto:"MCAA ARQUITETOS"},geradores_demanda:["Educação e cultura: bairro abriga instituições como UNIFESP, ESPM, Faculdade de Belas Artes, Cinemateca e SESC, atraindo acadêmicos, professores, estudantes e público nos eventos dessas instituições.","Hospitais de referência: Hospital Santa Cruz, Hospital Sepaco e Dante Pazzanese geram demanda de familiares e pacientes em tratamento prolongado.","Mobilidade excepcional: diversas estações de metrô (Ana Rosa, Vila Mariana, Santa Cruz), fácil acesso à Avenida Paulista e outras regiões da cidade.","Qualidade de vida e ambiente residencial: bairro arborizado, calmo e seguro — ideal para estadias tranquilas.","Proximidade ao Parque do Ibirapuera: um dos maiores e mais visitados parques da cidade, ponto de lazer, caminhadas e cultura."],rendimento:{diaria_media:"R$ 310,00",faturamento_bruto_mensal:"R$ 7.440,00"},video_url:"",drive_url:"",site_url:""},'pinheiros':{nome:"Vitacon Pinheiros",incorporadora:"Vitacon",localizacao:"Pinheiros - SP",area:"A partir de 18m²",valor:"A partir de R$ 490.000,00",rendimento_bruto:"R$ 7.875,00",descricao_longa:`Conectado por importantes vias, como Av. Doutor Arnaldo, Av. Rebouças e R. Oscar Freire. Cercado pelos bairros Vila Madalena, Perdizes e Jardins`,ficha_tecnica:{endereco:"Rua Heitor Penteado, 177",tipologia:"Studios",num_pavimentos:"Não informado",ticket_medio:"Não informado",arquiteto:"Não informado"},geradores_demanda:["150 metros do Futuro Cyrella Corporate By Pininfarina","Esquina com a Rua Capote Valente","220m de caminhada até a Rua Oscar Freire","12min de carro até a Av.Paulista","600m de caminhada até o Metrô Sumaré","07min de carro até o Metrô Oscar Freire","900m de caminhada até o Sancta Maggiore","09min de carro até o Hospital das Clínicas FMUSP","10min de carro até o INCOR","750m de caminhada até o Colégio Notre Dame","07min de carro até o St. Francis College","08min de carro até a USP","09min de carro até o Instituto Tomie Ohtake","10min de carro até o Centro Universitário - FAM","12min de carro até o Shopping Cidade São Paulo","08min de carro até o Estádio Pacaembu","11min de carro até o Allianz Parque","04min de carro até o Beco do Batman","05min de carro até o Restaurante Metzi","06min de carro até o Restaurante Pé de Manga","09min de carro até o Restaurante Jacarandá"],rendimento:{diaria_media:"R$ 350,00",faturamento_bruto_mensal:"R$ 7.875,00"},video_url:"",drive_url:"",site_url:""},'the-collection':{nome:"The Collection Vila Mariana",incorporadora:"Trisul",localizacao:"Vila Mariana - SP",area:"A partir de 25m²",valor:"A partir de R$ 350.833,00",rendimento_bruto:"R$ 7.440,00",descricao_longa:`No coração da Vila Mariana, nasce mais um símbolo de harmonia, sofisticação e inteligência imobiliária: o The Collection Vila Mariana, da Trisul. Com torre única e arquitetura contemporânea, o projeto reúne design moderno, rooftop com área de lazer completa e espaços planejada para uma vida urbana plena e conectada. Sua localização estratégica oferece fácil acesso ao metrô (a apenas 500 metros), universidades renomadas, escolas de ponta, hospitais, centros culturais, gastronomia diversificada e comércio pulsante. É um endereço que combina conveniência, valorização contínua e forte atratividade para turistas, profissionais em trânsito e estudantes, garantindo alta demanda e potencial de valorização patrimonial no curto e longo prazo. Os ambientes foram pensados para oferecer máxima funcionalidade, adaptando-se ao estilo de vida moderno e às exigências do público que busca experiências urbanas com conforto e praticidade.`,ficha_tecnica:{endereco:"Rua Professor Sud Mennucci, 165",tipologia:"studios, 1 e 2 quartos",num_unidades:"122 (NR)",num_pavimentos:"21",ticket_medio:"R$ 481.010,50",arquiteto:"LE Arquitetos"},geradores_demanda:["Mobilidade estratégica: metrô Santa Cruz (500 m), Vila Mariana e Ana Rosa, fácil acesso à Av. Paulista, Av. 23 de Maio e Aeroporto de Congonhas.","Lazer e cultura: Parque Ibirapuera a 7 min além de SESC Vila Mariana, cinemas, teatros e ciclovias.","Saúde: Hospitais Santa Cruz, São Paulo, Santa Joana, Beneficência Portuguesa e HCor.","Educação: Universidades e escolas renomadas: ESPM, Belas Artes, Colégio Madre Cabrini, ETAPA.","Gastronomia: Restaurantes e bares icônicos como Veloso Bar, Fornace e Vista Ibirapuera."],rendimento:{diaria_media:"R$ 310,00",faturamento_bruto_mensal:"R$ 7.440,00"},video_url:"",drive_url:"",site_url:""},'lorena':{nome:"Vitacon Lorena",incorporadora:"Vitacon",localizacao:"Jardins - SP",area:"A partir de 19,51m²",valor:"A partir de R$ 630.823,04",rendimento_bruto:"R$ 7.440,00",descricao_longa:`Localizado no coração gastronômico dos Jardins: ao redor estão Lellis Trattoria, Paris 6, Santo Grão, A Figueira Rubaiyat, Kouzina, Le Jazz, Nino Cucina, além de diversos cafés, rooftops e boutiques renomadas.`,ficha_tecnica:{endereco:"Alameda Lorena, 2158",tipologia:"Não Informado",num_unidades:"Não Informado",num_pavimentos:"Não Informado",ticket_medio:"Não Informado",arquiteto:"Não Informado"},geradores_demanda:["500m de caminhada até a Estação Oscar Freire (Linha Amarela)","09min de caminhada até a Estação Clínicas (Linha Verde)","05min de carro até o Hospital das Clínicas","07min de carro até o Hospital Sírio-Libanês","Fácil acesso ao Hospital Nove de Julho, Hospital Santa Catarina e HCor","18min de carro até o Aeroporto de Congonhas","Fácil acesso à Av. Rebouças, Av. Brasil, Rua Estados Unidos e Av. Paulista","08min de carro até o Parque Ibirapuera","10min de carro até o Parque Buenos Aires","06min de carro até o Sesc Avenida Paulista","06min de carro até a Universidade Mackenzie","09min de carro até a ESPM","11min de carro até a FAAP","02min de caminhada até a Rua Oscar Freire","06min de carro até o Shopping Cidade São Paulo","09min de carro até o Shopping Pátio Paulista","04min de carro até o Beco do Batman","05min de carro até o Restaurante Metzi","06min de carro até o Restaurante Pé de Manga","09min de carro até o Restaurante Jacarandá"],rendimento:{diaria_media:"R$ 310,00",faturamento_bruto_mensal:"R$ 7.440,00"},video_url:"",drive_url:"",site_url:""},'itaim':{nome:"Vitacon Itaim",incorporadora:"Vitacon",localizacao:"Itaim - SP",area:"24,51 m²",valor:"R$ 607.517,69",rendimento_bruto:"Não informado",descricao_longa:`Localizado no Itaim, um dos bairros mais valorizados de São Paulo, este imóvel oferece uma oportunidade estratégica de investimento em uma região com alta demanda corporativa e residencial. Com fácil acesso a importantes avenidas e centros de negócios, o Itaim é um polo de atração para executivos, profissionais liberais e turistas de alto padrão. A área é repleta de restaurantes renomados, bares, boutiques e serviços de alta qualidade, garantindo uma diária média elevada e ocupação consistente.`,ficha_tecnica:{endereco:"Não informado",tipologia:"Studio",num_unidades:"NR-0106 (Não Residencial)",num_pavimentos:"Não informado",ticket_medio:"Não informado",arquiteto:"Não informado"},geradores_demanda:["Próximo à Av. Faria Lima, um dos principais centros financeiros de São Paulo.","Área de alta renda com forte presença de sedes corporativas e escritórios de empresas multinacionais.","Ampla oferta de bares, restaurantes e opções de lazer de luxo.","Fácil acesso a transportes públicos e vias importantes.","Região com alta valorização imobiliária e público-alvo de alto poder aquisitivo."],rendimento:{diaria_media:"Não informado",faturamento_bruto_mensal:"Não informado"},correcoes:{obra:"INCC durante a obra",pos_habite_se:"IGP-M+1% após Habite-se"},video_url:"",drive_url:"",site_url:""}}},'goiania':{'prontos':{},'em-construcao':{'smart-36':{nome:"Smart 36",incorporadora:"EBM Incorporadora",localizacao:"Setor Bueno - Goiânia/GO",area:"A partir de 35m²",valor:"A partir de R$ 462.425,94",rendimento_bruto:"R$ 9.240,00",descricao_longa:`O Smart 36 foi projetado para unir modernidade, praticidade e rentabilidade em um único endereço. Localizado em uma região estratégica de Goiânia, no Setor Bueno, o empreendimento oferece unidades compactas e inteligentes, ideais para o público jovem, profissionais em mobilidade e turistas que buscam conforto aliado à conveniência. Com infraestrutura completa, áreas de lazer funcionais e tipologias versáteis, o Smart 36 se posiciona como uma excelente oportunidade de investimento no mercado imobiliário goianiense, especialmente no segmento de short stay, que cresce a cada ano impulsionado pelo turismo de lazer e negócios.`,ficha_tecnica:{endereco:"R. T-36, 3612 - St. Bueno, Goiânia - GO, 74223-052",tipologia:"Studios, 1 e 2 quartos",num_torres:"02 (residenciais)",num_unidades:"408",num_pavimentos:"26",ticket_medio:"R$ 472.129,80"},geradores_demanda:["Campus da UFG  – movimentação frequente de estudantes e servidores públicos na região, sobretudo para compromissos acadêmicos ou administrativos.","Parque Vaca Brava – zona de lazer com eventos, trilhas e áreas ao ar livre, muito valorizada por famílias e visitantes.","Goiânia Shopping – alta circulação para compras, alimentação e serviços, atraindo turistas e viajantes de negócios.","Gastronomia e vida urbana – ampla oferta de bares, cafés, restaurantes de renome, agregando valor à experiência do visitante.","Infraestrutura robusta – serviços completos a proximidade que atraem quem busca moradia temporária com conforto.","Logística e mobilidade – fácil acesso às principais vias da cidade, melhor conectividade para quem transita a trabalho ou lazer."],rendimento:{diaria_media:"R$420,00",faturamento_bruto_mensal:"R$ 9.240,00"},cronograma_obras:{previsao_entrega:"01/2028"},correcoes:{obra:"INCC durante a obra",pos_habite_se:"IGP-M+1% após Habite-se"},video_url:"https://maps.app.goo.gl/dsN5bdLYTf9mhZob6",drive_url:"",site_url:""},'maua':{nome:"Mauá",incorporadora:"FR Incorporadora",localizacao:"Setor Rodoviário - Goiânia/GO",area:"A partir de 60m²",valor:"A partir de R$ 387.941,01",rendimento_bruto:"R$ 4.840,00",descricao_longa:`O Mauá FR nasce para transformar o cotidiano em uma experiência elevada de conforto, lazer e bem-estar. Localizado em frente ao Shopping Cerrado e próximo à Avenida Leste-Oeste, no Setor Rodoviário em Goiânia, o empreendimento une a conveniência da mobilidade urbana com a exclusividade de um projeto moderno e sofisticado. Com torre única, apartamentos funcionais e áreas de lazer panorâmicas — incluindo rooftop com academia, espaços gourmet e piscina — o Mauá é a escolha perfeita para quem busca morar bem ou investir em um ativo sólido, que combina qualidade construtiva, segurança e valorização.`,ficha_tecnica:{endereco:"Rua Barão de Mauá, Q.09, L.08, Setor Rodoviário – Goiânia/GO",tipologia:"2 e 3 quartos",num_unidades:"212",num_pavimentos:"30",arquiteto:"Alexandre Leite Terra"},geradores_demanda:["Shopping Cerrado (em frente ao empreendimento), polo de lazer, compras e gastronomia.","Terminal Rodoviário de Goiânia, que conecta a cidade a todo o estado e ao país.","Hospitais e clínicas próximos, atraindo acompanhantes e pacientes de outras cidades.","Universidades da região (PUC Goiás, UFG, Faculdades privadas).","Eventos e negócios, impulsionados por centros de convenções e feiras em Goiânia.","Mobilidade estratégica: fácil acesso pela Avenida Leste-Oeste e conexões rápidas ao centro e demais bairros."],rendimento:{diaria_media:"R$220,00",faturamento_bruto_mensal:"R$ 4.840,00"},cronograma_obras:{previsao_entrega:"11/2028"},video_url:"https://maps.app.goo.gl/7vzKHJP5Pf7G98sn7",drive_url:"",site_url:""}}}};
+        const dadosCalculadora = {'domingos-morais':{fluxos:[{nome:"Unidade 18,06 m²",info_unidade:"Ref: U0247",pagamentos:[{valor:36718.56,data:new Date("2025-09-01"),descricao:"Ato"},{valor:6119.76,data:new Date("2025-10-01"),descricao:"Sinal"},{valor:6119.76,data:new Date("2025-11-01"),descricao:"Sinal"},{valor:6119.76,data:new Date("2025-12-01"),descricao:"Sinal"},...Array(33).fill(null).map((_,i)=>({valor:556.34,data:new Date(2026,i,1),descricao:`Mensal (${i+1}/33)`})),{valor:6119.76,data:new Date("2026-09-01"),descricao:"Anual (1/3)"},{valor:6119.76,data:new Date("2027-09-01"),descricao:"Anual (2/3)"},{valor:6119.76,data:new Date("2028-09-01"),descricao:"Anual (3/3)"},{valor:18359.28,data:new Date("2028-10-01"),descricao:"Única"},{valor:256662.71,data:new Date("2028-11-01"),descricao:"Financiamento"},{valor:367.19,data:new Date("2028-12-01"),descricao:"Periodicidade"}]},{nome:"Unidade 18,20 m²",info_unidade:"Ref: U0150",pagamentos:[{valor:36472.74,data:new Date("2025-09-01"),descricao:"Ato"},{valor:6078.79,data:new Date("2025-10-01"),descricao:"Sinal"},{valor:6078.79,data:new Date("2025-11-01"),descricao:"Sinal"},{valor:6078.79,data:new Date("2025-12-01"),descricao:"Sinal"},...Array(33).fill(null).map((_,i)=>({valor:552.62,data:new Date(2026,i,1),descricao:`Mensal (${i+1}/33)`})),{valor:6078.79,data:new Date("2026-09-01"),descricao:"Anual (1/3)"},{valor:6078.79,data:new Date("2027-09-01"),descricao:"Anual (2/3)"},{valor:6078.79,data:new Date("2028-09-01"),descricao:"Anual (3/3)"},{valor:18236.37,data:new Date("2028-10-01"),descricao:"Única"},{valor:254944.44,data:new Date("2028-11-01"),descricao:"Financiamento"},{valor:364.73,data:new Date("2028-12-01"),descricao:"Periodicidade"}]},{nome:"Unidade 18,25 m²",info_unidade:"Ref: U0201",pagamentos:[{valor:36746.78,data:new Date("2025-09-01"),descricao:"Ato"},{valor:6124.46,data:new Date("2025-10-01"),descricao:"Sinal"},{valor:6124.46,data:new Date("2025-11-01"),descricao:"Sinal"},{valor:6124.46,data:new Date("2025-12-01"),descricao:"Sinal"},...Array(33).fill(null).map((_,i)=>({valor:556.77,data:new Date(2026,i,1),descricao:`Mensal (${i+1}/33)`})),{valor:6124.46,data:new Date("2026-09-01"),descricao:"Anual (1/3)"},{valor:6124.46,data:new Date("2027-09-01"),descricao:"Anual (2/3)"},{valor:6124.46,data:new Date("2028-09-01"),descricao:"Anual (3/3)"},{valor:18373.39,data:new Date("2028-10-01"),descricao:"Única"},{valor:256860,data:new Date("2028-11-01"),descricao:"Financiamento"},{valor:367.47,data:new Date("2028-12-01"),descricao:"Periodicidade"}]},{nome:"Unidade 18,36 m²",info_unidade:"Ref: U0343",pagamentos:[{valor:36984.48,data:new Date("2025-09-01"),descricao:"Ato"},{valor:6164.08,data:new Date("2025-10-01"),descricao:"Sinal"},{valor:6164.08,data:new Date("2025-11-01"),descricao:"Sinal"},{valor:6164.08,data:new Date("2025-12-01"),descricao:"Sinal"},...Array(33).fill(null).map((_,i)=>({valor:560.37,data:new Date(2026,i,1),descricao:`Mensal (${i+1}/33)`})),{valor:6164.08,data:new Date("2026-09-01"),descricao:"Anual (1/3)"},{valor:6164.08,data:new Date("2027-09-01"),descricao:"Anual (2/3)"},{valor:6164.08,data:new Date("2028-09-01"),descricao:"Anual (3/3)"},{valor:18492.24,data:new Date("2028-10-01"),descricao:"Única"},{valor:258521.48,data:new Date("2028-11-01"),descricao:"Financiamento"},{valor:369.84,data:new Date("2028-12-01"),descricao:"Periodicidade"}]},{nome:"Unidade 18,93 m²",info_unidade:"Ref: U0219",pagamentos:[{valor:36773.74,data:new Date("2025-09-01"),descricao:"Ato"},{valor:6128.96,data:new Date("2025-10-01"),descricao:"Sinal"},{valor:6128.96,data:new Date("2025-11-01"),descricao:"Sinal"},{valor:6128.96,data:new Date("2025-12-01"),descricao:"Sinal"},...Array(33).fill(null).map((_,i)=>({valor:557.18,data:new Date(2026,i,1),descricao:`Mensal (${i+1}/33)`})),{valor:6128.96,data:new Date("2026-09-01"),descricao:"Anual (1/3)"},{valor:6128.96,data:new Date("2027-09-01"),descricao:"Anual (2/3)"},{valor:6128.96,data:new Date("2028-09-01"),descricao:"Anual (3/3)"},{valor:18386.87,data:new Date("2028-10-01"),descricao:"Única"},{valor:257048.41,data:new Date("2028-11-01"),descricao:"Financiamento"},{valor:367.74,data:new Date("2028-12-01"),descricao:"Periodicidade"}]},{nome:"Unidade 19,19 m²",info_unidade:"Ref: U1401",pagamentos:[{valor:39470.26,data:new Date("2025-09-01"),descricao:"Ato"},{valor:6578.38,data:new Date("2025-10-01"),descricao:"Sinal"},{valor:6578.38,data:new Date("2025-11-01"),descricao:"Sinal"},{valor:6578.38,data:new Date("2025-12-01"),descricao:"Sinal"},...Array(33).fill(null).map((_,i)=>({valor:598.03,data:new Date(2026,i,1),descricao:`Mensal (${i+1}/33)`})),{valor:6578.38,data:new Date("2026-09-01"),descricao:"Anual (1/3)"},{valor:6578.38,data:new Date("2027-09-01"),descricao:"Anual (2/3)"},{valor:6578.38,data:new Date("2028-09-01"),descricao:"Anual (3/3)"},{valor:19735.13,data:new Date("2028-10-01"),descricao:"Única"},{valor:275897.1,data:new Date("2028-11-01"),descricao:"Financiamento"},{valor:394.7,data:new Date("2028-12-01"),descricao:"Periodicidade"}]},{nome:"Unidade 30,32 m²",info_unidade:"Ref: U1229",pagamentos:[{valor:50562.37,data:new Date("2025-09-01"),descricao:"Ato"},{valor:8427.06,data:new Date("2025-10-01"),descricao:"Sinal"},{valor:8427.06,data:new Date("2025-11-01"),descricao:"Sinal"},{valor:8427.06,data:new Date("2025-12-01"),descricao:"Sinal"},...Array(33).fill(null).map((_,i)=>({valor:766.1,data:new Date(2026,i,1),descricao:`Mensal (${i+1}/33)`})),{valor:8427.06,data:new Date("2026-09-01"),descricao:"Anual (1/3)"},{valor:8427.06,data:new Date("2027-09-01"),descricao:"Anual (2/3)"},{valor:8427.06,data:new Date("2028-09-01"),descricao:"Anual (3/3)"},{valor:25281.18,data:new Date("2028-10-01"),descricao:"Única"},{valor:353430.94,data:new Date("2028-11-01"),descricao:"Financiamento"},{valor:505.62,data:new Date("2028-12-01"),descricao:"Periodicidade"}]},{nome:"Unidade 30,39 m²",info_unidade:"Ref: U0327",pagamentos:[{valor:48037.92,data:new Date("2025-09-01"),descricao:"Ato"},{valor:8006.32,data:new Date("2025-10-01"),descricao:"Sinal"},{valor:8006.32,data:new Date("2025-11-01"),descricao:"Sinal"},{valor:8006.32,data:new Date("2025-12-01"),descricao:"Sinal"},...Array(33).fill(null).map((_,i)=>({valor:727.85,data:new Date(2026,i,1),descricao:`Mensal (${i+1}/33)`})),{valor:8006.32,data:new Date("2026-09-01"),descricao:"Anual (1/3)"},{valor:8006.32,data:new Date("2027-09-01"),descricao:"Anual (2/3)"},{valor:8006.32,data:new Date("2028-09-01"),descricao:"Anual (3/3)"},{valor:24018.96,data:new Date("2028-10-01"),descricao:"Única"},{valor:335785.03,data:new Date("2028-11-01"),descricao:"Financiamento"},{valor:480.38,data:new Date("2028-12-01"),descricao:"Periodicidade"}]},{nome:"Unidade 30,89 m²",info_unidade:"Ref: U1132",pagamentos:[{valor:50493.13,data:new Date("2025-09-01"),descricao:"Ato"},{valor:8415.52,data:new Date("2025-10-01"),descricao:"Sinal"},{valor:8415.52,data:new Date("2025-11-01"),descricao:"Sinal"},{valor:8415.52,data:new Date("2025-12-01"),descricao:"Sinal"},...Array(33).fill(null).map((_,i)=>({valor:765.05,data:new Date(2026,i,1),descricao:`Mensal (${i+1}/33)`})),{valor:8415.52,data:new Date("2026-09-01"),descricao:"Anual (1/3)"},{valor:8415.52,data:new Date("2027-09-01"),descricao:"Anual (2/3)"},{valor:8415.52,data:new Date("2028-09-01"),descricao:"Anual (3/3)"},{valor:25246.56,data:new Date("2028-10-01"),descricao:"Única"},{valor:352946.96,data:new Date("2028-11-01"),descricao:"Financiamento"},{valor:504.93,data:new Date("2028-12-01"),descricao:"Periodicidade"}]},{nome:"Unidade 32,98 m²",info_unidade:"Ref: U0206",pagamentos:[{valor:49007.65,data:new Date("2025-09-01"),descricao:"Ato"},{valor:8167.94,data:new Date("2025-10-01"),descricao:"Sinal"},{valor:8167.94,data:new Date("2025-11-01"),descricao:"Sinal"},{valor:8167.94,data:new Date("2025-12-01"),descricao:"Sinal"},...Array(33).fill(null).map((_,i)=>({valor:742.54,data:new Date(2026,i,1),descricao:`Mensal (${i+1}/33)`})),{valor:8167.94,data:new Date("2026-09-01"),descricao:"Anual (1/3)"},{valor:8167.94,data:new Date("2027-09-01"),descricao:"Anual (2/3)"},{valor:8167.94,data:new Date("2028-09-01"),descricao:"Anual (3/3)"},{valor:24503.82,data:new Date("2028-10-01"),descricao:"Única"},{valor:342563.45,data:new Date("2028-11-01"),descricao:"Financiamento"},{valor:490.08,data:new Date("2028-12-01"),descricao:"Periodicidade"}]}] },'pinheiros':{fluxos:[{nome:"Unidade: 18m²",info_unidade:"Lançamento Previsto: Setembro/25",pagamentos:[{valor:49e3,data:new Date('2025-09-01'),descricao:"Entrada"},{valor:8166.67,data:new Date('2025-10-01'),descricao:"Sinal (1/3)"},{valor:8166.67,data:new Date('2025-11-01'),descricao:"Sinal (2/3)"},{valor:8166.67,data:new Date('2025-12-01'),descricao:"Sinal (3/3)"},{valor:700,data:new Date('2026-01-01'),descricao:"Mensal (1/35)"},{valor:700,data:new Date('2026-02-01'),descricao:"Mensal (2/35)"},{valor:700,data:new Date('2026-03-01'),descricao:"Mensal (3/35)"},{valor:700,data:new Date('2026-04-01'),descricao:"Mensal (4/35)"},{valor:700,data:new Date('2026-05-01'),descricao:"Mensal (5/35)"},{valor:700,data:new Date('2026-06-01'),descricao:"Mensal (6/35)"},{valor:700,data:new Date('2026-07-01'),descricao:"Mensal (7/35)"},{valor:700,data:new Date('2026-08-01'),descricao:"Mensal (8/35)"},{valor:8166.67,data:new Date('2026-09-01'),descricao:"Anual (1/3)"},{valor:700,data:new Date('2026-09-01'),descricao:"Mensal (9/35)"},{valor:700,data:new Date('2026-10-01'),descricao:"Mensal (10/35)"},{valor:700,data:new Date('2026-11-01'),descricao:"Mensal (11/35)"},{valor:700,data:new Date('2026-12-01'),descricao:"Mensal (12/35)"},{valor:700,data:new Date('2027-01-01'),descricao:"Mensal (13/35)"},{valor:700,data:new Date('2027-02-01'),descricao:"Mensal (14/35)"},{valor:700,data:new Date('2027-03-01'),descricao:"Mensal (15/35)"},{valor:700,data:new Date('2027-04-01'),descricao:"Mensal (16/35)"},{valor:700,data:new Date('2027-05-01'),descricao:"Mensal (17/35)"},{valor:700,data:new Date('2027-06-01'),descricao:"Mensal (18/35)"},{valor:700,data:new Date('2027-07-01'),descricao:"Mensal (19/35)"},{valor:700,data:new Date('2027-08-01'),descricao:"Mensal (20/35)"},{valor:8166.67,data:new Date('2027-09-01'),descricao:"Anual (2/3)"},{valor:700,data:new Date('2027-09-01'),descricao:"Mensal (21/35)"},{valor:700,data:new Date('2027-10-01'),descricao:"Mensal (22/35)"},{valor:700,data:new Date('2027-11-01'),descricao:"Mensal (23/35)"},{valor:700,data:new Date('2027-12-01'),descricao:"Mensal (24/35)"},{valor:700,data:new Date('2028-01-01'),descricao:"Mensal (25/35)"},{valor:700,data:new Date('2028-02-01'),descricao:"Mensal (26/35)"},{valor:700,data:new Date('2028-03-01'),descricao:"Mensal (27/35)"},{valor:700,data:new Date('2028-04-01'),descricao:"Mensal (28/35)"},{valor:700,data:new Date('2028-05-01'),descricao:"Mensal (29/35)"},{valor:700,data:new Date('2028-06-01'),descricao:"Mensal (30/35)"},{valor:700,data:new Date('2028-07-01'),descricao:"Mensal (31/35)"},{valor:700,data:new Date('2028-08-01'),descricao:"Mensal (32/35)"},{valor:8166.67,data:new Date('2028-09-01'),descricao:"Anual (3/3)"},{valor:700,data:new Date('2028-09-01'),descricao:"Mensal (33/35)"},{valor:700,data:new Date('2028-10-01'),descricao:"Mensal (34/35)"},{valor:24500,data:new Date('2028-11-01'),descricao:"Única"},{valor:700,data:new Date('2028-11-01'),descricao:"Mensal (35/35)"},{valor:342510,data:new Date('2028-12-01'),descricao:"Financiamento"},{valor:490,data:new Date('2029-01-01'),descricao:"Periodicidade"}]}] },'the-collection':{fluxos:[{nome:"Exemplo de Unidade",info_unidade:"A partir de 25m²",pagamentos:[{valor:35896.15,data:new Date('2025-09-01'),descricao:"Entrada"},{valor:5892.69,data:new Date('2025-10-01'),descricao:"Sinal"},{valor:5892.69,data:new Date('2025-11-01'),descricao:"Sinal"},{valor:5892.69,data:new Date('2025-12-01'),descricao:"Sinal"},{valor:498.56,data:new Date('2026-01-01'),descricao:"Mensal (1/36)"},{valor:498.56,data:new Date('2026-02-01'),descricao:"Mensal (2/36)"},{valor:498.56,data:new Date('2026-03-01'),descricao:"Mensal (3/36)"},{valor:498.56,data:new Date('2026-04-01'),descricao:"Mensal (4/36)"},{valor:498.56,data:new Date('2026-05-01'),descricao:"Mensal (5/36)"},{valor:498.56,data:new Date('2026-06-01'),descricao:"Mensal (6/36)"},{valor:498.56,data:new Date('2026-07-01'),descricao:"Mensal (7/36)"},{valor:498.56,data:new Date('2026-08-01'),descricao:"Mensal (8/36)"},{valor:5892.69,data:new Date('2026-09-01'),descricao:"Anual (1/3)"},{valor:498.56,data:new Date('2026-09-01'),descricao:"Mensal (9/36)"},{valor:498.56,data:new Date('2026-10-01'),descricao:"Mensal (10/36)"},{valor:498.56,data:new Date('2026-11-01'),descricao:"Mensal (11/36)"},{valor:498.56,data:new Date('2026-12-01'),descricao:"Mensal (12/36)"},{valor:498.56,data:new Date('2027-01-01'),descricao:"Mensal (13/36)"},{valor:498.56,data:new Date('2027-02-01'),descricao:"Mensal (14/36)"},{valor:498.56,data:new Date('2027-03-01'),descricao:"Mensal (15/36)"},{valor:498.56,data:new Date('2027-04-01'),descricao:"Mensal (16/36)"},{valor:498.56,data:new Date('2027-05-01'),descricao:"Mensal (17/36)"},{valor:498.56,data:new Date('2027-06-01'),descricao:"Mensal (18/36)"},{valor:498.56,data:new Date('2027-07-01'),descricao:"Mensal (19/36)"},{valor:498.56,data:new Date('2027-08-01'),descricao:"Mensal (20/36)"},{valor:5892.69,data:new Date('2027-09-01'),descricao:"Anual (2/3)"},{valor:498.56,data:new Date('2027-09-01'),descricao:"Mensal (21/36)"},{valor:498.56,data:new Date('2027-10-01'),descricao:"Mensal (22/36)"},{valor:498.56,data:new Date('2027-11-01'),descricao:"Mensal (23/36)"},{valor:498.56,data:new Date('2027-12-01'),descricao:"Mensal (24/36)"},{valor:498.56,data:new Date('2028-01-01'),descricao:"Mensal (25/36)"},{valor:498.56,data:new Date('2028-02-01'),descricao:"Mensal (26/36)"},{valor:498.56,data:new Date('2028-03-01'),descricao:"Mensal (27/36)"},{valor:498.56,data:new Date('2028-04-01'),descricao:"Mensal (28/36)"},{valor:498.56,data:new Date('2028-05-01'),descricao:"Mensal (29/36)"},{valor:498.56,data:new Date('2028-06-01'),descricao:"Mensal (30/36)"},{valor:498.56,data:new Date('2028-07-01'),descricao:"Mensal (31/36)"},{valor:498.56,data:new Date('2028-08-01'),descricao:"Mensal (32/36)"},{valor:17948.07,data:new Date('2028-10-01'),descricao:"Única"},{valor:295201.94,data:new Date('2028-11-01'),descricao:"Financiamento"},{valor:350.83,data:new Date('2028-12-01'),descricao:"Periodicidade"}]}] },'lorena':{fluxos:[{nome:"Unidade: U-0303",info_unidade:"Área Privativa: 19,51m²",pagamentos:[{valor:63082.29,data:new Date('2025-09-01'),descricao:"Ato"},{valor:10513.72,data:new Date('2025-10-01'),descricao:"Sinal (1/3)"},{valor:10513.72,data:new Date('2025-11-01'),descricao:"Sinal (2/3)"},{valor:10513.72,data:new Date('2025-12-01'),descricao:"Sinal (3/3)"},{valor:15770.58,data:new Date('2026-01-01'),descricao:"Mensal (1/4)"},{valor:15770.58,data:new Date('2026-02-01'),descricao:"Mensal (2/4)"},{valor:15770.58,data:new Date('2026-03-01'),descricao:"Mensal (3/4)"},{valor:15770.58,data:new Date('2026-04-01'),descricao:"Mensal (4/4)"},{valor:31541.15,data:new Date('2026-06-01'),descricao:"Anual (1/1)"},{valor:31541.15,data:new Date('2026-04-01'),descricao:"Única"},{valor:409404.15,data:new Date('2026-05-01'),descricao:"Financiamento"},{valor:630.82,data:new Date('2028-07-01'),descricao:"Periodicidade"}]}] },'itaim':{fluxos:[{nome:"Unidade: NR-0106 (Não Residencial)",info_unidade:"Área: 24,51 m²",pagamentos:[{valor:60751.77,data:new Date('2025-09-01'),descricao:"Entrada"},{valor:8100.24,data:new Date('2025-10-01'),descricao:"Sinal"},{valor:8100.24,data:new Date('2025-11-01'),descricao:"Sinal"},{valor:8100.24,data:new Date('2025-12-01'),descricao:"Sinal"},{valor:8100.24,data:new Date('2026-01-01'),descricao:"Mensal"},{valor:8100.24,data:new Date('2026-02-01'),descricao:"Mensal"},{valor:8100.24,data:new Date('2026-03-01'),descricao:"Mensal"},{valor:42526.24,data:new Date('2026-04-01'),descricao:"Única"},{valor:454638.24,data:new Date('2026-05-01'),descricao:"Financiamento"},{valor:1e3,data:new Date('2026-06-01'),descricao:"Periodicidade"}]}] },'on-brooklin':{fluxos:[{nome:"Unidade: R2V-0413",info_unidade:"4° Pavimento | Área: 21 m²",pagamentos:[{valor:354087.49,data:new Date('2025-09-01'),descricao:"Valor à vista"}]}] },'smart-36':{fluxos:[{nome:"Unidade: Exemplo",info_unidade:"Área: 35 m²",pagamentos:[{valor:39533.81,data:new Date('2025-09-01'),descricao:"Entrada"},{valor:6588.97,data:new Date('2025-10-01'),descricao:"Sinal"},{valor:6588.97,data:new Date('2025-11-01'),descricao:"Sinal"},{valor:6588.97,data:new Date('2025-12-01'),descricao:"Sinal"},{valor:599,data:new Date('2026-01-01'),descricao:"Mensal (1/33)"},{valor:599,data:new Date('2026-02-01'),descricao:"Mensal (2/33)"},{valor:599,data:new Date('2026-03-01'),descricao:"Mensal (3/33)"},{valor:599,data:new Date('2026-04-01'),descricao:"Mensal (4/33)"},{valor:599,data:new Date('2026-05-01'),descricao:"Mensal (5/33)"},{valor:599,data:new Date('2026-06-01'),descricao:"Mensal (6/33)"},{valor:599,data:new Date('2026-07-01'),descricao:"Mensal (7/33)"},{valor:599,data:new Date('2026-08-01'),descricao:"Mensal (8/33)"},{valor:6588.97,data:new Date('2026-09-01'),descricao:"Anual (1/3)"},{valor:599,data:new Date('26-09-01'),descricao:"Mensal (9/33)"},{valor:599,data:new Date('2026-10-01'),descricao:"Mensal (10/33)"},{valor:599,data:new Date('2026-11-01'),descricao:"Mensal (11/33)"},{valor:599,data:new Date('2026-12-01'),descricao:"Mensal (12/33)"},{valor:599,data:new Date('2027-01-01'),descricao:"Mensal (13/33)"},{valor:599,data:new Date('2027-02-01'),descricao:"Mensal (14/33)"},{valor:599,data:new Date('2027-03-01'),descricao:"Mensal (15/33)"},{valor:599,data:new Date('2027-04-01'),descricao:"Mensal (16/33)"},{valor:599,data:new Date('2027-05-01'),descricao:"Mensal (17/33)"},{valor:599,data:new Date('2027-06-01'),descricao:"Mensal (18/33)"},{valor:599,data:new Date('2027-07-01'),descricao:"Mensal (19/33)"},{valor:599,data:new Date('2027-08-01'),descricao:"Mensal (20/33)"},{valor:6588.97,data:new Date('2027-09-01'),descricao:"Anual (2/3)"},{valor:599,data:new Date('2027-09-01'),descricao:"Mensal (21/33)"},{valor:599,data:new Date('2027-10-01'),descricao:"Mensal (22/33)"},{valor:599,data:new Date('2027-11-01'),descricao:"Mensal (23/33)"},{valor:599,data:new Date('2027-12-01'),descricao:"Mensal (24/33)"},{valor:599,data:new Date('2028-01-01'),descricao:"Mensal (25/33)"},{valor:599,data:new Date('2028-02-01'),descricao:"Mensal (26/33)"},{valor:599,data:new Date('2028-03-01'),descricao:"Mensal (27/33)"},{valor:599,data:new Date('2028-04-01'),descricao:"Mensal (28/33)"},{valor:599,data:new Date('2028-05-01'),descricao:"Mensal (29/33)"},{valor:599,data:new Date('2028-06-01'),descricao:"Mensal (30/33)"},{valor:599,data:new Date('2028-07-01'),descricao:"Mensal (31/33)"},{valor:599,data:new Date('2028-08-01'),descricao:"Mensal (32/33)"},{valor:6588.97,data:new Date('2028-09-01'),descricao:"Anual (3/3)"},{valor:599,data:new Date('2028-09-01'),descricao:"Mensal (33/33)"},{valor:19766.9,data:new Date('2028-10-01'),descricao:"Única"},{valor:276341.23,data:new Date('2028-11-01'),descricao:"Financiamento"},{valor:395.34,data:new Date('2028-12-01'),descricao:"Periodicidade"}]}] },'maua':{fluxos:[{nome:"Unidade: Exemplo",info_unidade:"Área: 60 m²",pagamentos:[{valor:39533.81,data:new Date('2025-09-01'),descricao:"Entrada"},{valor:6588.97,data:new Date('2025-10-01'),descricao:"Sinal"},{valor:6588.97,data:new Date('2025-11-01'),descricao:"Sinal"},{valor:6588.97,data:new Date('2025-12-01'),descricao:"Sinal"},{valor:599,data:new Date('2026-01-01'),descricao:"Mensal (1/33)"},{valor:599,data:new Date('2026-02-01'),descricao:"Mensal (2/33)"},{valor:599,data:new Date('2026-03-01'),descricao:"Mensal (3/33)"},{valor:599,data:new Date('2026-04-01'),descricao:"Mensal (4/33)"},{valor:599,data:new Date('2026-05-01'),descricao:"Mensal (5/33)"},{valor:599,data:new Date('2026-06-01'),descricao:"Mensal (6/33)"},{valor:599,data:new Date('2026-07-01'),descricao:"Mensal (7/33)"},{valor:599,data:new Date('2026-08-01'),descricao:"Mensal (8/33)"},{valor:6588.97,data:new Date('2026-09-01'),descricao:"Anual (1/3)"},{valor:599,data:new Date('2026-09-01'),descricao:"Mensal (9/33)"},{valor:599,data:new Date('2026-10-01'),descricao:"Mensal (10/33)"},{valor:599,data:new Date('2026-11-01'),descricao:"Mensal (11/33)"},{valor:599,data:new Date('2026-12-01'),descricao:"Mensal (12/33)"},{valor:599,data:new Date('2027-01-01'),descricao:"Mensal (13/33)"},{valor:599,data:new Date('2027-02-01'),descricao:"Mensal (14/33)"},{valor:599,data:new Date('2027-03-01'),descricao:"Mensal (15/33)"},{valor:599,data:new Date('2027-04-01'),descricao:"Mensal (16/33)"},{valor:599,data:new Date('2027-05-01'),descricao:"Mensal (17/33)"},{valor:599,data:new Date('2027-06-01'),descricao:"Mensal (18/33)"},{valor:599,data:new Date('2027-07-01'),descricao:"Mensal (19/33)"},{valor:599,data:new Date('2027-08-01'),descricao:"Mensal (20/33)"},{valor:6588.97,data:new Date('2027-09-01'),descricao:"Anual (2/3)"},{valor:599,data:new Date('2027-09-01'),descricao:"Mensal (21/33)"},{valor:599,data:new Date('2027-10-01'),descricao:"Mensal (22/33)"},{valor:599,data:new Date('2027-11-01'),descricao:"Mensal (23/33)"},{valor:599,data:new Date('2027-12-01'),descricao:"Mensal (24/33)"},{valor:599,data:new Date('2028-01-01'),descricao:"Mensal (25/33)"},{valor:599,data:new Date('2028-02-01'),descricao:"Mensal (26/33)"},{valor:599,data:new Date('2028-03-01'),descricao:"Mensal (27/33)"},{valor:599,data:new Date('2028-04-01'),descricao:"Mensal (28/33)"},{valor:599,data:new Date('2028-05-01'),descricao:"Mensal (29/33)"},{valor:599,data:new Date('2028-06-01'),descricao:"Mensal (30/33)"},{valor:599,data:new Date('2028-07-01'),descricao:"Mensal (31/33)"},{valor:599,data:new Date('2028-08-01'),descricao:"Mensal (32/33)"},{valor:6588.97,data:new Date('2028-09-01'),descricao:"Anual (3/3)"},{valor:599,data:new Date('2028-09-01'),descricao:"Mensal (33/33)"},{valor:19766.9,data:new Date('2028-10-01'),descricao:"Única"},{valor:276341.23,data:new Date('2028-11-01'),descricao:"Financiamento"},{valor:395.34,data:new Date('2028-12-01'),descricao:"Periodicidade"}]}] }};
+
+        // --- VARIÁVEIS DE ESTADO E ELEMENTOS DO DOM ---
+        const dashboardContent = document.getElementById('dashboard-content');
+        const backButton = document.getElementById('back-button');
+        const comparatorButton = document.getElementById('comparator-button');
+        const headerSubtitle = document.getElementById('header-subtitle');
+        const detailedFlowModal = document.getElementById('detailed-flow-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalContent = document.getElementById('modal-content');
+        
+        let state = {
+            view: 'home', // 'home', 'city', 'property', 'comparator_city_select', 'comparator_results'
+            city: null,
+            property: null,
+            history: [],
+        };
+
+        // --- FUNÇÕES AUXILIARES ---
+        const formatCurrency = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        const getImovelData = (imovelId) => {
+            for (const cityId in dadosPorCidade) {
+                for (const status in dadosPorCidade[cityId]) {
+                    if (dadosPorCidade[cityId][status][imovelId]) {
+                        return dadosPorCidade[cityId][status][imovelId];
+                    }
+                }
+            }
+            return null;
+        };
+        const parseValue = (str) => {
+            if (!str || typeof str !== 'string') return null;
+            const cleanStr = str.replace(/[^0-9,]/g, '').replace(',', '.');
+            return parseFloat(cleanStr) || null;
+        };
+        const parseArea = (str) => {
+            if (!str || typeof str !== 'string') return null;
+            const cleanStr = str.replace(/[^0-9,]/g, '').replace(',', '.');
+            return parseFloat(cleanStr) || null;
+        };
+
+        // --- FUNÇÕES DE RENDERIZAÇÃO ---
+
+        function renderHomePage() {
+            headerSubtitle.textContent = 'Selecione uma cidade para iniciar a análise';
+            dashboardContent.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8">
+                    <div class="card text-center cursor-pointer" data-action="select-city" data-city="saopaulo">
+                        <i class="fas fa-city text-5xl mb-4 text-accent"></i>
+                        <h2 class="text-3xl font-bold text-white">São Paulo</h2>
+                    </div>
+                    <div class="card text-center cursor-pointer" data-action="select-city" data-city="goiania">
+                        <i class="fas fa-city text-5xl mb-4 text-accent"></i>
+                        <h2 class="text-3xl font-bold text-white">Goiânia</h2>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderCityPage(cityId) {
+            const cityName = cityId === 'saopaulo' ? 'São Paulo' : 'Goiânia';
+            headerSubtitle.textContent = `Explorando imóveis em ${cityName}`;
+            const cityData = dadosPorCidade[cityId];
+            let contentHtml = '';
+
+            const createSection = (title, properties) => {
+                if (!properties || Object.keys(properties).length === 0) return '';
+                
+                const propertyCards = Object.entries(properties).map(([id, prop]) => `
+                    <div class="card !p-0 overflow-hidden cursor-pointer" data-action="select-property" data-property="${id}">
+                        <div class="p-6">
+                            <h3 class="text-lg font-bold text-white">${prop.nome}</h3>
+                            <p class="text-sm text-gray-400">${prop.localizacao}</p>
+                            <p class="text-accent font-semibold mt-2">${prop.valor}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                return `
+                    <section>
+                        <h2 class="text-2xl font-bold text-white mb-4 border-b-2 border-accent pb-2">${title}</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            ${propertyCards}
+                        </div>
+                    </section>
+                `;
+            };
+
+            contentHtml += createSection('Imóveis Prontos', cityData.prontos);
+            contentHtml += createSection('Imóveis em Construção', cityData['em-construcao']);
+            
+            dashboardContent.innerHTML = contentHtml || '<p class="text-center text-gray-200">Nenhum imóvel encontrado.</p>';
+        }
+
+        function renderPropertyPage(propertyId) {
+            const imovel = getImovelData(propertyId);
+            headerSubtitle.textContent = imovel.nome;
+            
+            const renderList = (items) => items.map(item => `<li class="list-item"><i class="fa-solid fa-check-circle icon mt-1"></i> <span>${item}</span></li>`).join('');
+
+            const renderCalculator = () => {
+                const data = dadosCalculadora[propertyId];
+                if (!data || !data.fluxos) return '<p class="text-sm text-gray-400">Nenhuma unidade com fluxo de pagamento detalhado disponível.</p>';
+
+                const unitInputs = data.fluxos.map((fluxo, index) => {
+                    const totalValue = fluxo.pagamentos.reduce((sum, p) => sum + p.valor, 0);
+                    return `
+                    <div class="flex items-center justify-between p-3 bg-[#3E4954] rounded-lg gap-4">
+                        <div class="text-sm flex-grow">
+                            <span class="font-bold text-white">${fluxo.nome}</span>
+                            <span class="text-gray-300 block">${fluxo.info_unidade} | Total: ${formatCurrency(totalValue)}</span>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <label for="unit-qty-${index}" class="text-sm text-gray-300">Qtd:</label>
+                            <input type="number" id="unit-qty-${index}" class="unit-quantity-input w-20 text-center bg-[#212A31] rounded-md border border-gray-600 p-1 text-white" value="0" min="0" data-unit-value="${totalValue}">
+                        </div>
+                    </div>
+                `}).join('');
+
+                return `
+                    <div class="space-y-3">${unitInputs}</div>
+                    <div class="mt-6 p-4 bg-[#212A31] rounded-lg text-center">
+                        <h4 class="text-lg font-semibold text-gray-300">VALOR TOTAL SIMULADO</h4>
+                        <p id="total-calculator" class="text-3xl font-bold text-accent mt-1">${formatCurrency(0)}</p>
+                    </div>
+                `;
+            };
+
+            dashboardContent.innerHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    <div class="lg:col-span-3 space-y-6">
+                        <div class="card">
+                            <h2 class="text-xl font-semibold text-white mb-4">Sobre o Imóvel</h2>
+                            <p class="text-sm text-gray-200 leading-relaxed">${imovel.descricao_longa}</p>
+                            ${imovel.adicionais ? `<div class="mt-4 text-xs text-gray-400 italic"><p>${imovel.adicionais}</p></div>` : ''}
+                        </div>
+                        <div class="card">
+                            <h2 class="text-xl font-semibold text-white mb-4">Geradores de Demanda</h2>
+                            <ul class="list-none space-y-3 text-sm text-gray-200">${renderList(imovel.geradores_demanda)}</ul>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="card">
+                            <h2 class="text-xl font-semibold text-white mb-4">Detalhes</h2>
+                            <div class="space-y-3 text-gray-200 text-sm">
+                               <p class="flex items-center gap-2"><i class="fa-solid fa-building icon w-4 text-center"></i> <span class="font-bold">Incorporadora:</span> ${imovel.incorporadora}</p>
+                               <p class="flex items-center gap-2"><i class="fa-solid fa-map-marker-alt icon w-4 text-center"></i> <span class="font-bold">Localização:</span> ${imovel.localizacao}</p>
+                               <p class="flex items-center gap-2"><i class="fa-solid fa-ruler-combined icon w-4 text-center"></i> <span class="font-bold">Área:</span> ${imovel.area}</p>
+                               <p class="flex items-center gap-2"><i class="fa-solid fa-dollar-sign icon w-4 text-center"></i> <span class="font-bold">Valor:</span> ${imovel.valor_de ? `<span class="line-through text-gray-400">${imovel.valor_de}</span> <span class="font-bold text-red-500">${imovel.valor}</span>` : imovel.valor}</p>
+                            </div>
+                        </div>
+                         <div class="card">
+                            <h2 class="text-xl font-semibold text-white mb-2">Rendimento Bruto</h2>
+                            <p class="text-3xl font-extrabold text-accent">${imovel.rendimento_bruto || 'N/A'}</p>
+                            <div class="mt-4 text-sm space-y-2 text-gray-200">
+                                <p><span class="font-bold">Diária média:</span> ${imovel.rendimento.diaria_media}</p>
+                                <p><span class="font-bold">Faturamento bruto mensal:</span> ${imovel.rendimento.faturamento_bruto_mensal}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4">Calculadora de Investimento</h2>
+                    <p class="text-sm text-gray-300 mb-4">Insira a quantidade de unidades que deseja simular para calcular o investimento total.</p>
+                    <div id="calculator-container">${renderCalculator()}</div>
+                </div>
+                 <div class="card">
+                    <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4">Informações Adicionais</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                        <a href="${imovel.video_url || '#'}" target="_blank" class="flex flex-col items-center justify-center p-4 bg-[#3E4954] rounded-lg hover:bg-accent transition-colors">
+                            <i class="fab fa-youtube text-3xl mb-2"></i><span class="font-semibold text-sm">Vídeo</span>
+                        </a>
+                        <a href="${imovel.drive_url || '#'}" target="_blank" class="flex flex-col items-center justify-center p-4 bg-[#3E4954] rounded-lg hover:bg-accent transition-colors">
+                            <i class="fas fa-book-open text-3xl mb-2"></i><span class="font-semibold text-sm">Book</span>
+                        </a>
+                        <a href="${imovel.drive_url || '#'}" target="_blank" class="flex flex-col items-center justify-center p-4 bg-[#3E4954] rounded-lg hover:bg-accent transition-colors">
+                            <i class="fas fa-images text-3xl mb-2"></i><span class="font-semibold text-sm">Imagens</span>
+                        </a>
+                        <button data-action="show-detailed-flow" id="detailed-flow-btn" class="flex flex-col items-center justify-center p-4 bg-[#3E4954] rounded-lg hover:bg-accent transition-colors">
+                             <i class="fas fa-stream text-3xl mb-2"></i><span class="font-semibold text-sm">Fluxo Detalhado</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderComparatorCitySelect() {
+            headerSubtitle.textContent = 'Selecione uma cidade para comparar os imóveis';
+            dashboardContent.innerHTML = `
+                <div class="text-center mb-8">
+                     <h2 class="text-3xl font-bold text-white">Comparativo de Imóveis</h2>
+                     <p class="text-gray-300">Análise de indicadores chave para ajudar na sua decisão</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8">
+                    <div class="card text-center cursor-pointer" data-action="run-comparison" data-city="saopaulo">
+                        <i class="fas fa-city text-5xl mb-4 text-accent"></i>
+                        <h2 class="text-3xl font-bold text-white">São Paulo</h2>
+                    </div>
+                    <div class="card text-center cursor-pointer" data-action="run-comparison" data-city="goiania">
+                        <i class="fas fa-city text-5xl mb-4 text-accent"></i>
+                        <h2 class="text-3xl font-bold text-white">Goiânia</h2>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderComparatorResultsPage(cityId) {
+            const cityName = cityId === 'saopaulo' ? 'São Paulo' : 'Goiânia';
+            headerSubtitle.textContent = `Comparativo de Imóveis em ${cityName}`;
+
+            const allProperties = { ...dadosPorCidade[cityId].prontos, ...dadosPorCidade[cityId]['em-construcao'] };
+            
+            const processedData = Object.values(allProperties).map(prop => {
+                const area = parseArea(prop.area);
+                const valor = parseValue(prop.valor);
+                const rendimento = parseValue(prop.rendimento_bruto);
+                return {
+                    ...prop,
+                    areaNum: area,
+                    valorNum: valor,
+                    rendimentoNum: rendimento,
+                    custoM2: (area && valor) ? (valor / area) : null,
+                };
+            }).filter(p => p.valorNum && p.areaNum); // Only compare properties with valid area and value
+
+            if (processedData.length === 0) {
+                dashboardContent.innerHTML = '<p class="text-center text-gray-200">Não há dados suficientes para comparar os imóveis nesta cidade.</p>';
+                return;
+            }
+
+            const findBest = (metric, order = 'desc') => {
+                return processedData.filter(p => p[metric] != null).sort((a, b) => order === 'desc' ? b[metric] - a[metric] : a[metric] - b[metric])[0];
+            };
+
+            const best = {
+                menorValor: findBest('valorNum', 'asc'),
+                maiorArea: findBest('areaNum', 'desc'),
+                melhorRendimento: findBest('rendimentoNum', 'desc'),
+                melhorCustoM2: findBest('custoM2', 'asc'),
+            };
+
+            const createResultCard = (title, icon, property, value, unit) => {
+                if (!property) return '';
+                return `
+                    <div class="card text-center">
+                        <i class="fas ${icon} text-4xl text-accent mb-3"></i>
+                        <h3 class="text-xl font-bold text-white">${title}</h3>
+                        <p class="text-2xl font-bold text-accent mt-2">${value} <span class="text-base font-normal text-gray-300">${unit}</span></p>
+                        <div class="mt-4 pt-4 border-t border-gray-700">
+                            <p class="font-semibold text-white">${property.nome}</p>
+                            <p class="text-sm text-gray-400">${property.localizacao}</p>
+                        </div>
+                    </div>
+                `;
+            };
+
+            dashboardContent.innerHTML = `
+                 <div class="text-center mb-8">
+                     <h2 class="text-3xl font-bold text-white">Resultados para ${cityName}</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    ${createResultCard('Menor Valor', 'fa-dollar-sign', best.menorValor, formatCurrency(best.menorValor?.valorNum), '')}
+                    ${createResultCard('Maior Área', 'fa-ruler-combined', best.maiorArea, best.maiorArea?.areaNum, 'm²')}
+                    ${createResultCard('Melhor Rendimento', 'fa-chart-line', best.melhorRendimento, formatCurrency(best.melhorRendimento?.rendimentoNum), '/mês')}
+                    ${createResultCard('Melhor Custo-Benefício', 'fa-gem', best.melhorCustoM2, formatCurrency(best.melhorCustoM2?.custoM2), '/m²')}
+                </div>
+            `;
+        }
+
+        // --- MODAL & FLUXO DETALHADO ---
+        function hideModal() {
+            detailedFlowModal.classList.add('hidden');
+        }
+
+        function renderDetailedFlow() {
+            const calculatorContainer = document.getElementById('calculator-container');
+            if (!calculatorContainer) return;
+
+            const inputs = calculatorContainer.querySelectorAll('.unit-quantity-input');
+            const paymentsByMonth = {};
+            let totalUnits = 0;
+
+            inputs.forEach((input, index) => {
+                const quantity = parseInt(input.value) || 0;
+                if (quantity > 0) {
+                    totalUnits += quantity;
+                    const fluxo = dadosCalculadora[state.property].fluxos[index];
+                    fluxo.pagamentos.forEach(p => {
+                        const monthKey = `${p.data.getFullYear()}-${String(p.data.getMonth() + 1).padStart(2, '0')}`;
+                        if (!paymentsByMonth[monthKey]) {
+                            paymentsByMonth[monthKey] = { total: 0, descriptions: {} };
+                        }
+                        paymentsByMonth[monthKey].total += p.valor * quantity;
+                        
+                        const descKey = p.descricao;
+                        if (!paymentsByMonth[monthKey].descriptions[descKey]) {
+                            paymentsByMonth[monthKey].descriptions[descKey] = 0;
+                        }
+                        paymentsByMonth[monthKey].descriptions[descKey] += quantity;
+                    });
+                }
+            });
+
+            if (totalUnits === 0) {
+                modalContent.innerHTML = `<p class="text-center text-gray-300 py-8">Por favor, insira a quantidade de uma ou mais unidades na calculadora para ver o fluxo de pagamento detalhado.</p>`;
+            } else {
+                const sortedMonths = Object.keys(paymentsByMonth).sort();
+                const tableRows = sortedMonths.map(monthKey => {
+                    const data = paymentsByMonth[monthKey];
+                    const [year, month] = monthKey.split('-');
+                    const monthName = new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                    
+                    const descString = Object.entries(data.descriptions)
+                                            .map(([desc, qty]) => `${desc} (x${qty})`)
+                                            .join(', ');
+
+                    return `
+                        <tr class="border-b border-gray-700 hover:bg-gray-800">
+                            <td class="p-3 font-semibold text-white capitalize whitespace-nowrap">${monthName}</td>
+                            <td class="p-3 text-accent font-bold whitespace-nowrap">${formatCurrency(data.total)}</td>
+                            <td class="p-3 text-sm text-gray-300">${descString}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                modalContent.innerHTML = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="sticky top-0 bg-[#2E3944]">
+                                <tr class="border-b border-gray-600">
+                                    <th class="p-3 text-sm font-bold uppercase text-gray-400">Mês/Ano</th>
+                                    <th class="p-3 text-sm font-bold uppercase text-gray-400">Valor a Pagar</th>
+                                    <th class="p-3 text-sm font-bold uppercase text-gray-400">Descrição das Parcelas</th>
+                                </tr>
+                            </thead>
+                            <tbody>${tableRows}</tbody>
+                        </table>
+                    </div>
+                `;
+            }
+            
+            detailedFlowModal.classList.remove('hidden');
+        }
+
+        // --- CONTROLE DE NAVEGAÇÃO E ESTADO ---
+        function updateUI() {
+            backButton.classList.toggle('hidden', state.history.length === 0);
+            comparatorButton.classList.toggle('hidden', state.view !== 'home');
+
+            switch (state.view) {
+                case 'home': renderHomePage(); break;
+                case 'city': renderCityPage(state.city); break;
+                case 'property': renderPropertyPage(state.property); break;
+                case 'comparator_city_select': renderComparatorCitySelect(); break;
+                case 'comparator_results': renderComparatorResultsPage(state.city); break;
+            }
+        }
+
+        function navigateTo(newState) {
+            state.history.push({ ...state });
+            Object.assign(state, newState);
+            updateUI();
+        }
+
+        function goBack() {
+            if (state.history.length > 0) {
+                state = state.history.pop();
+                updateUI();
+            }
+        }
+        
+        // --- LÓGICA DA CALCULADORA ---
+        function calculateTotal() {
+            const container = document.getElementById('calculator-container');
+            if (!container) return;
+
+            const inputs = container.querySelectorAll('.unit-quantity-input');
+            let total = 0;
+
+            inputs.forEach(input => {
+                const quantity = parseInt(input.value) || 0;
+                const unitValue = parseFloat(input.dataset.unitValue);
+                if (quantity > 0 && unitValue) {
+                    total += quantity * unitValue;
+                }
+            });
+
+            document.getElementById('total-calculator').textContent = formatCurrency(total);
+        }
+
+        // --- EVENT LISTENERS ---
+
+        dashboardContent.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-action]');
+            if (!target) return;
+
+            const { action, city, property } = target.dataset;
+
+            if (action === 'select-city') navigateTo({ view: 'city', city: city });
+            else if (action === 'select-property') navigateTo({ view: 'property', property: property });
+            else if (action === 'run-comparison') navigateTo({ view: 'comparator_results', city: city });
+            else if (action === 'show-detailed-flow') renderDetailedFlow();
+        });
+
+        dashboardContent.addEventListener('input', (e) => {
+            if (e.target.classList.contains('unit-quantity-input')) {
+                calculateTotal();
+            }
+        });
+
+        backButton.addEventListener('click', goBack);
+        
+        comparatorButton.addEventListener('click', () => {
+             navigateTo({ view: 'comparator_city_select' });
+        });
+
+        closeModalBtn.addEventListener('click', hideModal);
+        detailedFlowModal.addEventListener('click', (e) => {
+            if (e.target === detailedFlowModal) {
+                hideModal();
+            }
+        });
+
+        // --- INICIALIZAÇÃO ---
+        window.addEventListener('load', updateUI);
+
+    </script>
+</body>
+</html>
+
+
